@@ -1,0 +1,66 @@
+https://www.1001tracklists.com/tracklist/2myl86z1/wandw-mainstage-podcast-378-2017-09-15.html
+#include "newson.h"
+// LOS CAMBIOS ESTAN COMENTADOS CON MAYUSCULAS Y ENTRE [CORCHETES]
+#include "ui_newson.h"
+#include <cmath>
+
+Newson::Newson(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::Newson)
+{
+    ui->setupUi(this);
+    connect(ui->inicio,SIGNAL(clicked()),this,SLOT(ejecutar()));
+    connect(ui->limpio,SIGNAL(clicked()),this,SLOT(limpiar()));
+    connect(ui->initval,SIGNAL(valueChanged(double)),this,SLOT(activar()));
+    connect(ui->errorac,SIGNAL(valueChanged(double)),this,SLOT(activar()));
+    connect(ui->maxiter,SIGNAL(valueChanged(int)),this,SLOT(activar())); // [CONECTAR EL SPINBOX DE LAS ITERACIONES Y LA SEÑAL VALUE CHANGED CON EL SLOT ACTIVAR]
+    ui->inicio->setDisabled(true);
+    ui->limpio->setDisabled(true);
+}
+double Newson::f(double z){
+    return (sin(5*z));
+}
+double Newson::df(double w){
+    return (5*cos(5*w));
+}
+void Newson::activar(){ // [ESTE SLOT CAMBIO BASTANTE, PARA NO INCLUIR CEROS EN LOS SPINBOXES PORQUE SE PONE LOCO EL PROGRAMA :V]
+    x=0, ea=0; xr=0; i=0; imax=0; // [ESTO ESTABA EL EL SLOT EJECUTAR, SOLO HAY QUE MOVERLO A ESTE SLOT]
+    ui->limpio->setDisabled(false); // [HABILITAR EL BOTON PARA LIMPIAR]
+// [LAS SIGUIENTES TRES LINEAS ESTABAN EL EL SLOT EJECUTAR, SOLO HAY QUE MOVERLAS A ESTE SLOT]
+    x=ui->initval->value();
+    ea=ui->errorac->value();
+    imax=ui->maxiter->value();
+    if((x!=0)&&(ea!=0)&&(imax!=0)){ // [ESTA CONDICION ACTIVA EL BOTON INICIAR SIEMPRE QUE TODOS LOS SPINBOXES SEAN DISTINTOS DE CERO]
+        ui->inicio->setDisabled(false);// [ACTIVAR EL BOTON INICIO]
+    }
+    else { // [SI NO SE CUPLE LA CONDICION, EL BOTON DE INICIAR NO SE ACTIVA]
+        ui->inicio->setDisabled(true);
+    }
+}
+void Newson::ejecutar(){ // [DE ESTE SLOT SE MOVIERON ALGUNAS LINEAS, PERO NADA MAS]
+    ei=100;
+    while ((ei>ea)&(imax>i)) {
+        xr=(x)-(f(x)/df(x)); 
+        ei=100*std::abs((xr-x)/xr);
+        i++;
+        x=xr;
+    }
+    ui->rootplay->display(x);
+    ui->errmin->display(ei);
+    ui->numiter->display(i);
+}
+void Newson::limpiar(){ //[ESTE SLOT NO CAMBIA PARA NADA]
+    ui->initval->setValue(0.0);
+    ui->errorac->setValue(0.0);
+    ui->maxiter->setValue(0);
+    ui->rootplay->display(0.0);
+    ui->errmin->display(0.0);
+    ui->numiter->display(0);
+    ui->inicio->setDisabled(true);
+    ui->limpio->setDisabled(true);
+}
+
+Newson::~Newson()
+{
+    delete ui;
+}
